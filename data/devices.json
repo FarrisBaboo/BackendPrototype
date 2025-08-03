@@ -1,0 +1,5 @@
+[
+  { "id": 1, "dataset_id": 1, "name": "Sensor A" },
+  { "id": 2, "dataset_id": 1, "name": "Sensor B" },
+  { "id": 3, "dataset_id": 1, "name": "Sensor C" }
+]
