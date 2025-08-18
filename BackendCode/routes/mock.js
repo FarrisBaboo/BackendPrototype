@@ -75,4 +75,7 @@ router.get("/stream-names", getStreamNames);
  */
 router.post('/filter-streams', postFilterStreams);
 
+const { postAnalyze } = require('../controllers/pythonController');
+router.post('/analyze', postAnalyze);
+
 module.exports = router;
