@@ -1,32 +1,61 @@
-const axios = require('axios');
-const FormData = require('form-data');
-const fs = require('fs');
-const path = require('path');
+// handles HTTP request logic for Python-backed endpoints
 
-const PYTHON_URL = 'http://localhost:5000';
+const {
+  analyze,
+  visualize,
+  analyzeCsv,
+  analyzeCorr
+} = require('../services/pythonService');
 
-exports.postAnalyze = async (req, res) => {
+// POST /analyze — correlation analysis
+const postAnalyze = async (req, res) => {
   try {
-    const { streams, start_date, end_date, threshold, algo_type } = req.body;
-
-    // Load your CSV file (adjust path if needed)
-    const filePath = path.join(__dirname, '../mock_data/complex.csv');
-
-    const form = new FormData();
-    form.append('file', fs.createReadStream(filePath));
-    form.append('streams', JSON.stringify(streams));
-    form.append('start_date', start_date);
-    form.append('end_date', end_date);
-    form.append('threshold', threshold);
-    form.append('algo_type', algo_type);
-
-    const response = await axios.post(`${PYTHON_URL}/analyze`, form, {
-      headers: form.getHeaders()
-    });
-
-    res.json(response.data);
+    const result = await analyze(req.body);
+    res.json(result);
   } catch (err) {
-    console.error('Python service error:', err.message);
-    res.status(500).json({ error: 'Failed to connect to Python service' });
+    console.error('Analyze error:', err.message);
+    res.status(500).json({ error: 'Failed to perform analysis' });
   }
+};
+
+// POST /visualize — returns base64 image
+const postVisualize = async (req, res) => {
+  try {
+    const result = await visualize(req.body);
+    res.json(result);
+  } catch (err) {
+    console.error('Visualization error:', err.message);
+    res.status(500).json({ error: 'Failed to generate visualization' });
+  }
+};
+
+// POST /analyze-csv — returns cleaned CSV
+const postAnalyzeCsv = async (req, res) => {
+  try {
+    const result = await analyzeCsv(req.body);
+    res.setHeader('Content-Disposition', 'attachment; filename=report.csv');
+    res.setHeader('Content-Type', 'text/csv');
+    res.send(result);
+  } catch (err) {
+    console.error('Analyze CSV error:', err.message);
+    res.status(500).json({ error: 'Failed to analyze CSV' });
+  }
+};
+
+// POST /analyze-corr — returns correlation matrix
+const postAnalyzeCorr = async (req, res) => {
+  try {
+    const result = await analyzeCorr(req.body);
+    res.json(result);
+  } catch (err) {
+    console.error('Analyze Corr error:', err.message);
+    res.status(500).json({ error: 'Failed to perform correlation analysis' });
+  }
+};
+
+module.exports = {
+  postAnalyze,
+  postVisualize,
+  postAnalyzeCsv,
+  postAnalyzeCorr
 };
