@@ -1,5 +1,0 @@
-[
-  { "id": 1, "device_id": 1, "stream_type": "Temperature" },
-  { "id": 2, "device_id": 2, "stream_type": "Humidity" },
-  { "id": 3, "device_id": 3, "stream_type": "Pressure" }
-]
