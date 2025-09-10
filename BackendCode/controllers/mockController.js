@@ -1,55 +1,38 @@
-//handles HTTP request logic for mock data routes
-
 const {
-  readProcessedData,
-  getAvailableStreamNames,
-  filterEntriesByStreamNames
-} = require('../services/mockService');
+  getStreams: repoGetStreams,
+  getStreamNames: repoGetStreamNames,
+  getFilteredStreams
+} = require('../repositories/pgRepository');
 
-//GET /streams — Returns JSON file containing the stream data
-const getStreams = (req, res) => {
+async function getStreams(req, res) {
   try {
-    const data = readProcessedData();
+    const limit = Number(req.query.limit) || 8000;
+    const offset = Number(req.query.offset) || 0;
+    const since = req.query.since || undefined;
+    const data = await repoGetStreams({ limit, offset, since });
     res.json(data);
-  } catch (err) {
-    console.error('Error reading stream data:', err);
-    res.status(500).json({ error: 'Failed to load stream data' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to load streams' });
   }
-};
+}
 
-//Get /stream-names — Returns an array of available stream names
-const getStreamNames = (req, res) => {
+async function getStreamNames(_req, res) {
   try {
-    const streamNames = getAvailableStreamNames();
-    if (streamNames.length === 0) {
-      return res.status(404).json({ error: "No stream names found" });
-    }
-    res.json(streamNames);
-  } catch (err) {
-    console.error('Error getting stream names:', err);
-    res.status(500).json({ error: 'Failed to get stream names' });
+    const names = await repoGetStreamNames();
+    res.json(names);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to load stream names' });
   }
-};
+}
 
-//POST /filter-streams — Returns JSON file by Filtering entries by stream names (without time window)
-const postFilterStreams = (req, res) => {
-  const { streamNames } = req.body;
-
-  if (!Array.isArray(streamNames) || streamNames.length === 0) {
-    return res.status(400).json({ error: 'streamNames must be a non-empty array' });
-  }
-
+async function postFilterStreams(req, res) {
   try {
-    const filtered = filterEntriesByStreamNames(streamNames);
-    res.json(filtered);
-  } catch (err) {
-    console.error('Error filtering stream data:', err);
-    res.status(500).json({ error: 'Failed to filter stream data' });
+    const { streamNames } = req.body || {};
+    const data = await getFilteredStreams(streamNames);
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to filter streams' });
   }
-};
+}
 
-module.exports = {
-  getStreams,
-  getStreamNames,
-  postFilterStreams
-};
+module.exports = { getStreams, getStreamNames, postFilterStreams };
