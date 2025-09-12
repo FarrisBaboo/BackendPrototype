@@ -87,3 +87,98 @@ Create a `.env` file at the repository root (one level above `BackendCode/`). Th
 Request path for mock data: `route` → `mockController` → `mockService` → `mockRepository` → filesystem JSON.
 
 Request path for Python endpoints: `route` → `pythonController` → `pythonService` → `pythonRepository` → HTTP to Flask service with `FormData` (CSV + params).
+
+### Validation and typed contracts
+- Zod schemas under `BackendCode/validation/schemas.js` define request contracts for each endpoint.
+- `validateRequest` middleware in `BackendCode/middleware/validateRequest.js` parses and validates `params`, `query`, and `body`, attaching `req.validatedParams`, `req.validatedQuery`, and `req.validatedBody` on success.
+- Routes apply validation per endpoint, e.g. `router.post('/analyze', validateRequest({ body: analyzeBody }), postAnalyze)`.
+
+Sample 400 response when validation fails:
+```json
+{
+  "error": "ValidationError",
+  "issues": [
+    { "path": ["streams"], "message": "Array must contain at least 1 element(s)" },
+    { "path": ["threshold"], "message": "Number must be less than or equal to 1" }
+  ]
+}
+```
+
+### Response shaping (DTOs)
+- DTO mappers in `BackendCode/dtos/index.js` normalize response objects for predictability (explicit fields, stable key order).
+- Currently applied to:
+  - `GET /api/streams`
+  - `POST /api/filter-streams`
+  More endpoints can adopt DTOs as they stabilize.
+
+### API Examples
+
+**GET /api/streams**
+```bash
+curl http://localhost:3000/api/streams
+```
+
+**GET /api/stream-names**
+```bash
+curl http://localhost:3000/api/stream-names
+```
+
+**POST /api/filter-streams**
+```bash
+curl -X POST http://localhost:3000/api/filter-streams \
+  -H "Content-Type: application/json" \
+  -d '{"streamNames": ["Temperature", "Voltage Charge"]}'
+```
+
+**POST /api/analyze**
+```bash
+curl -X POST http://localhost:3000/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "streams": ["s1", "s2", "s3"],
+    "start_date": "2025-01-01T00:00:00Z",
+    "end_date": "2025-01-06T00:10:00Z",
+    "threshold": 0.5,
+    "algo_type": "correlation"
+  }'
+```
+
+**POST /api/analyze-csv**
+```bash
+curl -X POST http://localhost:3000/api/analyze-csv \
+  -H "Content-Type: application/json" \
+  -d '{"window_size": 15}' \
+  --output report.csv
+```
+
+**POST /api/analyze-corr**
+```bash
+curl -X POST http://localhost:3000/api/analyze-corr \
+  -H "Content-Type: application/json" \
+  -d '{
+    "streams": ["s1", "s2", "s3"],
+    "start_date": "2025-01-01T00:00:00Z",
+    "end_date": "2025-01-06T00:10:00Z",
+    "threshold": 0.5
+  }'
+```
+
+**POST /api/visualize**
+```bash
+curl -X POST http://localhost:3000/api/visualize \
+  -H "Content-Type: application/json" \
+  -d '{
+    "streams": ["field1", "field2", "field3"],
+    "start_date": "2025-03-18T06:55:31Z",
+    "end_date": "2025-03-18T07:00:43Z",
+    "type": "grouped_bar_chart"
+  }'
+```
+
+**Validation Error Example**
+```bash
+curl -X POST http://localhost:3000/api/filter-streams \
+  -H "Content-Type: application/json" \
+  -d '{"streamNames": []}'
+# Returns 400 with validation error details
+```
