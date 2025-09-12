@@ -15,6 +15,16 @@ const {
 } = require('../controllers/pythonController');
 
 const router = express.Router();
+const { z } = require('zod');
+const { validateRequest } = require('../middleware/validateRequest');
+const {
+  getStreamsSchema,
+  getStreamNamesSchema,
+  filterStreamsBody,
+  analyzeBody,
+  analyzeCsvBody,
+  analyzeCorrBody
+} = require('../validation/schemas');
 
 /*
  * GET /streams
@@ -35,7 +45,7 @@ const router = express.Router();
  *   ...
  * ]
  */
-router.get('/streams', getStreams);
+router.get('/streams', validateRequest(getStreamsSchema), getStreams);
 
 /*
  * GET /stream-names
@@ -51,7 +61,7 @@ router.get('/streams', getStreams);
  *   "Current Draw"
  * ]
  */
-router.get("/stream-names", getStreamNames);
+router.get('/stream-names', validateRequest(getStreamNamesSchema), getStreamNames);
 
 /*
  * POST /filter-streams
@@ -80,7 +90,7 @@ router.get("/stream-names", getStreamNames);
  *    }
  * ] 
  */
-router.post('/filter-streams', postFilterStreams);
+router.post('/filter-streams', validateRequest({ body: filterStreamsBody }), postFilterStreams);
 
 /*
  * POST /analyze
@@ -107,7 +117,7 @@ router.post('/filter-streams', postFilterStreams);
  *   }
  * }
  */
-router.post('/analyze', postAnalyze);
+router.post('/analyze', validateRequest({ body: analyzeBody }), postAnalyze);
 
 /*
  * POST /analyze-csv
@@ -128,7 +138,7 @@ router.post('/analyze', postAnalyze);
  * - Generated timestamps
  * - Cleaned structure with no empty rows or columns
  */
-router.post('/analyze-csv', postAnalyzeCsv);
+router.post('/analyze-csv', validateRequest({ body: analyzeCsvBody }), postAnalyzeCsv);
 
 /*
  * POST /analyze-corr
@@ -157,7 +167,7 @@ router.post('/analyze-csv', postAnalyzeCsv);
  *   ]
  * }
  */
-router.post('/analyze-corr', postAnalyzeCorr); //not working yet, need to test
+router.post('/analyze-corr', validateRequest({ body: analyzeCorrBody }), postAnalyzeCorr); //not working yet, need to test
 
 /*
  * POST /visualize

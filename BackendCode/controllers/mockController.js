@@ -33,11 +33,7 @@ const getStreamNames = (req, res) => {
 
 //POST /filter-streams — Returns JSON file by Filtering entries by stream names (without time window)
 const postFilterStreams = (req, res) => {
-  const { streamNames } = req.body;
-
-  if (!Array.isArray(streamNames) || streamNames.length === 0) {
-    return res.status(400).json({ error: 'streamNames must be a non-empty array' });
-  }
+  const { streamNames } = req.validatedBody || req.body;
 
   try {
     const filtered = filterEntriesByStreamNames(streamNames);

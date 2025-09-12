@@ -10,7 +10,7 @@ const {
 // POST /analyze — correlation analysis
 const postAnalyze = async (req, res) => {
   try {
-    const result = await analyze(req.body);
+    const result = await analyze(req.validatedBody || req.body);
     res.json(result);
   } catch (err) {
     console.error('Analyze error:', err.message);
@@ -21,7 +21,7 @@ const postAnalyze = async (req, res) => {
 // POST /visualize — returns base64 image
 const postVisualize = async (req, res) => {
   try {
-    const result = await visualize(req.body);
+    const result = await visualize(req.validatedBody || req.body);
     res.json(result);
   } catch (err) {
     console.error('Visualization error:', err.message);
@@ -32,7 +32,7 @@ const postVisualize = async (req, res) => {
 // POST /analyze-csv — returns cleaned CSV
 const postAnalyzeCsv = async (req, res) => {
   try {
-    const result = await analyzeCsv(req.body);
+    const result = await analyzeCsv(req.validatedBody || req.body);
     res.setHeader('Content-Disposition', 'attachment; filename=report.csv');
     res.setHeader('Content-Type', 'text/csv');
     res.send(result);
@@ -45,7 +45,7 @@ const postAnalyzeCsv = async (req, res) => {
 // POST /analyze-corr — returns correlation matrix
 const postAnalyzeCorr = async (req, res) => {
   try {
-    const result = await analyzeCorr(req.body);
+    const result = await analyzeCorr(req.validatedBody || req.body);
     res.json(result);
   } catch (err) {
     console.error('Analyze Corr error:', err.message);
