@@ -5,12 +5,13 @@ const {
   getAvailableStreamNames,
   filterEntriesByStreamNames
 } = require('../services/mockService');
+const { mapEntriesDto } = require('../dtos');
 
 //GET /streams — Returns JSON file containing the stream data
 const getStreams = (req, res) => {
   try {
     const data = readProcessedData();
-    res.json(data);
+    res.json(mapEntriesDto(data));
   } catch (err) {
     console.error('Error reading stream data:', err);
     res.status(500).json({ error: 'Failed to load stream data' });
@@ -33,15 +34,11 @@ const getStreamNames = (req, res) => {
 
 //POST /filter-streams — Returns JSON file by Filtering entries by stream names (without time window)
 const postFilterStreams = (req, res) => {
-  const { streamNames } = req.body;
-
-  if (!Array.isArray(streamNames) || streamNames.length === 0) {
-    return res.status(400).json({ error: 'streamNames must be a non-empty array' });
-  }
+  const { streamNames } = req.validatedBody || req.body;
 
   try {
     const filtered = filterEntriesByStreamNames(streamNames);
-    res.json(filtered);
+    res.json(mapEntriesDto(filtered));
   } catch (err) {
     console.error('Error filtering stream data:', err);
     res.status(500).json({ error: 'Failed to filter stream data' });
